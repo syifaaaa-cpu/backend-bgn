@@ -9,7 +9,7 @@ app.use(express.json());
 
 // Konfigurasi CORS agar frontend (Live Server) diizinkan mengakses backend
 app.use(cors({
-    origin: ['http://127.0.0.1:5500', 'http://localhost:5500'],
+    origin: ['http://127.0.0.1:5500', 'http://localhost:5500', 'https://syifaaaa-cpu.github.io'],
     credentials: true
 }));
 
