@@ -18,11 +18,10 @@ const ONEBOX_API_URL = 'https://dev.onebox.co.id';
 
 // 2. Kredensial Lengkap sesuai Postman kamu
 const LOGIN_CREDENTIALS = {
-    email: "admin-news@ciptadrasoft.com",       // Ganti dengan email API kamu
-    password: "Admin123", // Ganti dengan password API kamu
-    siteId: "169"         // Ganti dengan siteId yang biasa dipakai di Postman
+    email: process.env.ONEBOX_EMAIL,
+    password: process.env.ONEBOX_PASSWORD,
+    siteId: process.env.ONEBOX_SITE_ID
 };
-
 // Fungsi helper untuk mendapatkan Token Baru secara Otomatis
 async function getFreshToken() {
     try {
