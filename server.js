@@ -44,15 +44,18 @@ async function getFreshToken() {
         throw error;
     }
 }
-
-// 3. Endpoint Berita Otomatis
+// Endpoint Berita Otomatis
 app.get('/api/news/get', async (req, res) => {
     try {
         const freshToken = await getFreshToken();
 
+        // Coba tambahkan params siteId atau kirimkan query jika diperlukan oleh Onebox
         const newsResponse = await axios.get(`${ONEBOX_API_URL}/api/news/get`, {
             headers: {
                 'Authorization': `Bearer ${freshToken}`
+            },
+            params: {
+                siteId: "169" // Menyesuaikan siteId agar server pusat mengirimkan data berita yang benar
             }
         });
 
