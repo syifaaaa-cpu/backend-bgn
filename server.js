@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const qs = require('qs'); // <-- Diperlukan untuk format x-www-form-urlencoded
 const cors = require('cors');
 
 const app = express();
@@ -7,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// 1. Konfigurasi CORS agar GitHub Pages & Live Server diizinkan
+// 1. Konfigurasi CORS
 app.use(cors({
     origin: ['http://127.0.0.1:5500', 'http://localhost:5500', 'https://syifaaaa-cpu.github.io'],
     credentials: true
@@ -15,20 +16,31 @@ app.use(cors({
 
 const ONEBOX_API_URL = 'https://dev.onebox.co.id';
 
-// 2. Kredensial Login Tetap (Masukkan Username & Password API Onebox kamu di sini)
+// 2. Kredensial Lengkap sesuai Postman kamu
 const LOGIN_CREDENTIALS = {
-    username: "admin-news@ciptadrasoft.com", // Ganti dengan username/email API Onebox kamu
-    password: "Admin123"  // Ganti dengan password API Onebox kamu
+    email: "admin-news@ciptadrasoft.com",       // Ganti dengan email API kamu
+    password: "Admin123", // Ganti dengan password API kamu
+    siteId: "169"         // Ganti dengan siteId yang biasa dipakai di Postman
 };
 
 // Fungsi helper untuk mendapatkan Token Baru secara Otomatis
 async function getFreshToken() {
     try {
-        const response = await axios.post(`${ONEBOX_API_URL}/api/login`, LOGIN_CREDENTIALS);
-        // Sesuaikan struktur token dari respon API Onebox (misal: response.data.token)
-        return response.data.token || response.data.data.token; 
+        // Menggunakan format x-www-form-urlencoded dengan 'qs.stringify'
+        const response = await axios.post(
+            `${ONEBOX_API_URL}/api/Authenticate/post`, 
+            qs.stringify(LOGIN_CREDENTIALS), 
+            {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }
+        );
+        
+        // Sesuaikan dengan struktur token balasan dari API Onebox
+        return response.data.token || response.data.data.token || response.data.accessToken; 
     } catch (error) {
-        console.error('Gagal mendapatkan token otomatis:', error.message);
+        console.error('Gagal mendapatkan token otomatis:', error.response?.data || error.message);
         throw error;
     }
 }
@@ -36,10 +48,8 @@ async function getFreshToken() {
 // 3. Endpoint Berita Otomatis
 app.get('/api/news/get', async (req, res) => {
     try {
-        // Ambil token fresh secara otomatis setiap kali ada yang akses
         const freshToken = await getFreshToken();
 
-        // Panggil API berita menggunakan token fresh tersebut
         const newsResponse = await axios.get(`${ONEBOX_API_URL}/api/news/get`, {
             headers: {
                 'Authorization': `Bearer ${freshToken}`
