@@ -49,13 +49,18 @@ app.get('/api/news/get', async (req, res) => {
     try {
         const freshToken = await getFreshToken();
 
-        // Coba tambahkan params siteId atau kirimkan query jika diperlukan oleh Onebox
+        // Mengirimkan parameter startdate dan enddate sesuai dengan yang ada di Postman
         const newsResponse = await axios.get(`${ONEBOX_API_URL}/api/news/get`, {
             headers: {
                 'Authorization': `Bearer ${freshToken}`
             },
             params: {
-                siteId: "169" // Menyesuaikan siteId agar server pusat mengirimkan data berita yang benar
+                startdate: "01-01-2000",
+                enddate: "31-12-2030", // Bisa pakai rentang waktu yang aman ke depan
+                wilayah: "",
+                actor: "",
+                subject: "",
+                category: ""
             }
         });
 
