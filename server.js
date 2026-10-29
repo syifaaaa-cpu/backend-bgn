@@ -3,43 +3,59 @@ const axios = require('axios');
 const cors = require('cors');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// Konfigurasi CORS agar frontend (Live Server) diizinkan mengakses backend
+// 1. Konfigurasi CORS agar GitHub Pages & Live Server diizinkan
 app.use(cors({
     origin: ['http://127.0.0.1:5500', 'http://localhost:5500', 'https://syifaaaa-cpu.github.io'],
     credentials: true
 }));
 
-// URL Dasar API Onebox
 const ONEBOX_API_URL = 'https://dev.onebox.co.id';
 
-// Token Master yang disimpan aman di backend (tidak terlihat di frontend)
-const MASTER_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb2NhbGhvc3QiLCJzdWIiOjUyMSwiZXhwIjoxNzkzMjcxNTA1LCJuYmYiOjE3OTMyNjI1MDUsImlhdCI6MTc5MzI2MjUwNSwianRpIjoiOHFnaCtUeGMzQnVKZFRQdGx5U3J6Qm9SUy93dUh2cmJLNFd5OG9tMWQ0OD0iLCJzZXNpZCI6Ijk2ZTNmODdkMDljZDdiOTg2MDA3NjYzNDgyZWViYWRlIiwidXNpZCI6NjIyOCwic2lkIjoxNjl9.gNrQrhp6b5BzYSx4EfifAeAhCodpOeyeReKvTSB1Znk";
+// 2. Kredensial Login Tetap (Masukkan Username & Password API Onebox kamu di sini)
+const LOGIN_CREDENTIALS = {
+    username: "admin-news@ciptadrasoft.com", // Ganti dengan username/email API Onebox kamu
+    password: "Admin123"  // Ganti dengan password API Onebox kamu
+};
 
-// ==========================================
-// ENDPOINT BERITA OTOMATIS (Tanpa Login)
-// ==========================================
+// Fungsi helper untuk mendapatkan Token Baru secara Otomatis
+async function getFreshToken() {
+    try {
+        const response = await axios.post(`${ONEBOX_API_URL}/api/login`, LOGIN_CREDENTIALS);
+        // Sesuaikan struktur token dari respon API Onebox (misal: response.data.token)
+        return response.data.token || response.data.data.token; 
+    } catch (error) {
+        console.error('Gagal mendapatkan token otomatis:', error.message);
+        throw error;
+    }
+}
+
+// 3. Endpoint Berita Otomatis
 app.get('/api/news/get', async (req, res) => {
     try {
-        // Backend otomatis mengambil data ke Onebox menggunakan Master Token
-        const response = await axios.get(`${ONEBOX_API_URL}/api/news/get?startdate=01-01-2024&enddate=31-12-2030&limit=100`, {
+        // Ambil token fresh secara otomatis setiap kali ada yang akses
+        const freshToken = await getFreshToken();
+
+        // Panggil API berita menggunakan token fresh tersebut
+        const newsResponse = await axios.get(`${ONEBOX_API_URL}/api/news/get`, {
             headers: {
-                'Authorization': `Bearer ${MASTER_TOKEN}`
+                'Authorization': `Bearer ${freshToken}`
             }
         });
 
-        return res.json(response.data);
-
+        res.json(newsResponse.data);
     } catch (error) {
         console.error('Gagal Ambil Berita:', error.message);
-        return res.status(500).json({ success: false, message: 'Gagal mengambil data dari server Onebox.' });
+        res.status(500).json({ 
+            message: 'Gagal mengambil berita dari server pusat',
+            error: error.message 
+        });
     }
 });
 
-// Jalankan Server Backend di Port 3000
 app.listen(PORT, () => {
-    console.log(`Backend server BGN berjalan di http://localhost:${PORT}`);
+    console.log(`Server listening on port ${PORT}`);
 });
